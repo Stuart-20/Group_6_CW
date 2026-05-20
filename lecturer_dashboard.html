@@ -1,0 +1,291 @@
+{% if section == 'print_attendance' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Print Attendance</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        th { background-color: #ddd; }
+        .print-btn { margin-bottom: 20px; }
+        @media print {
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h2>Attendance for: {{ selected_lecture.title }}</h2>
+    <button class="print-btn" onclick="window.print()">Print this page as PDF</button>
+    <table>
+        <tr><th>Student Name</th><th>Email</th><th>Student Number</th><th>Status</th></tr>
+        {% for att in attendance_list %}
+        <tr>
+            <td>{{ att.student.name }}</td>
+            <td>{{ att.student.email }}</td>
+            <td>{{ att.student.student_number }}</td>
+            <td style="color:green; font-weight:bold;">Present</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+{% else %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lecturer Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 { margin: 0; }
+        .logout { color: #ecf0f1; text-decoration: none; font-weight: bold; }
+        .logout:hover { text-decoration: underline; }
+        .nav {
+            background: #34495e;
+            padding: 10px 30px;
+            display: flex;
+            gap: 20px;
+        }
+        .nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .nav a:hover, .nav a.active {
+            background-color: #1abc9c;
+            color: white;
+        }
+        .content {
+            padding: 30px;
+        }
+        .card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover { background-color: #2980b9; }
+        .btn-green { background-color: #27ae60; }
+        .btn-green:hover { background-color: #219a52; }
+        .btn-orange { background-color: #e67e22; }
+        .btn-orange:hover { background-color: #d35400; }
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .form-inline input, .form-inline select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .bar-container {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .bar-label {
+            width: 180px;
+            font-weight: bold;
+        }
+        .bar {
+            height: 24px;
+            background-color: #3498db;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .bar-value {
+            min-width: 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h2>Lecturer Dashboard</h2>
+    <a href="/lecturer/logout" class="logout">Logout</a>
+</div>
+<div class="nav">
+    <a href="?section=attendance" class="{% if section == 'attendance' %}active{% endif %}">View Attendance</a>
+    <a href="?section=trends" class="{% if section == 'trends' %}active{% endif %}">Attendance Trends</a>
+    <a href="?section=add_student" class="{% if section == 'add_student' %}active{% endif %}">Add Student</a>
+    <a href="?section=search" class="{% if section == 'search' %}active{% endif %}">Search Student</a>
+</div>
+
+<div class="content">
+    {% if section == 'attendance' %}
+        <div class="card">
+            <h3>Start New Lecture</h3>
+            <form method="POST" action="/lecturer/dashboard" class="form-inline">
+                <input type="hidden" name="form_type" value="new_lecture">
+                <input type="text" name="lecture_title" placeholder="Lecture Title" required>
+                <button type="submit" class="btn btn-green">Start Lecture</button>
+            </form>
+        </div>
+        <div class="card">
+            <h3>Lectures</h3>
+            {% if lectures %}
+                <table>
+                    <tr><th>ID</th><th>Title</th><th>Status</th><th>Date Created</th><th>Action</th></tr>
+                    {% for lec in lectures %}
+                        <tr>
+                            <td>{{ lec.id }}</td>
+                            <td>{{ lec.title }}</td>
+                            <td>{{ 'Active' if lec.is_active else 'Inactive' }}</td>
+                            <td>{{ lec.date_created.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="?section=attendance&lecture_id={{ lec.id }}" class="btn">View Attendance</a>
+                                <a href="?section=print_attendance&lecture_id={{ lec.id }}" target="_blank" class="btn">Print PDF</a>
+                                {% if not lec.is_active %}
+                                <form method="POST" action="/lecturer/dashboard" style="display:inline;">
+                                    <input type="hidden" name="form_type" value="set_active">
+                                    <input type="hidden" name="lecture_id" value="{{ lec.id }}">
+                                    <button type="submit" class="btn btn-orange">Set Active</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No lectures created yet.</p>
+            {% endif %}
+        </div>
+        {% if selected_lecture %}
+        <div class="card">
+            <h3>Attendance for: {{ selected_lecture.title }}</h3>
+            {% if attendance_list %}
+                <table>
+                    <tr><th>Student Name</th><th>Email</th><th>Student Number</th><th>Status</th></tr>
+                    {% for att in attendance_list %}
+                        <tr>
+                            <td>{{ att.student.name }}</td>
+                            <td>{{ att.student.email }}</td>
+                            <td>{{ att.student.student_number }}</td>
+                            <td style="color:green; font-weight:bold;">Present</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No students have marked attendance yet.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    {% elif section == 'trends' %}
+        <div class="card">
+            <h3>Attendance Trends (per lecture)</h3>
+            {% if trend_data %}
+                {% for item in trend_data %}
+                    <div class="bar-container">
+                        <span class="bar-label">{{ item.lecture.title }}</span>
+                        <div class="bar" style="width: {{ item.percentage }}%; background-color: {% if item.percentage < 40 %}#e74c3c{% elif item.percentage < 70 %}#f39c12{% else %}#27ae60{% endif %};"></div>
+                        <span class="bar-value">{{ item.present }} / {{ item.total }} ({{ item.percentage }}%)</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No attendance data yet.</p>
+            {% endif %}
+        </div>
+
+    {% elif section == 'add_student' %}
+        <div class="card">
+            <h3>Add New Student</h3>
+            {% if add_message %}
+                <p style="color: green; font-weight: bold;">{{ add_message }}</p>
+            {% endif %}
+            <form method="POST" action="/lecturer/dashboard?section=add_student">
+                <input type="hidden" name="form_type" value="add_student">
+                <div style="margin-bottom:10px;">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required style="width:100%; padding:8px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Email</label>
+                    <input type="email" name="email" required style="width:100%; padding:8px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Student Number</label>
+                    <input type="text" name="student_number" required style="width:100%; padding:8px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Password</label>
+                    <input type="password" name="password" required style="width:100%; padding:8px;">
+                </div>
+                <button type="submit" class="btn btn-green">Add Student</button>
+            </form>
+        </div>
+
+    {% elif section == 'search' %}
+        <div class="card">
+            <h3>Search Student</h3>
+            <form method="POST" action="/lecturer/dashboard?section=search" class="form-inline">
+                <input type="hidden" name="form_type" value="search">
+                <input type="text" name="query" placeholder="Name or Student Number" value="{{ query or '' }}">
+                <button type="submit" class="btn">Search</button>
+            </form>
+        </div>
+        {% if search_results is not none %}
+        <div class="card">
+            <h3>Search Results</h3>
+            {% if search_results %}
+                <table>
+                    <tr><th>Name</th><th>Email</th><th>Student Number</th><th>Total Present</th></tr>
+                    {% for stu, count in search_results %}
+                        <tr>
+                            <td>{{ stu.name }}</td>
+                            <td>{{ stu.email }}</td>
+                            <td>{{ stu.student_number }}</td>
+                            <td>{{ count }} lectures</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No students found.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+</body>
+</html>
+{% endif %}
