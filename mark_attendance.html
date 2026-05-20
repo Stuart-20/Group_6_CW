@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mark Attendance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 500px;
+            text-align: center;
+        }
+        h2 { color: #2c3e50; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-present {
+            padding: 10px 25px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-present:hover { background-color: #219a52; }
+        .message { color: #e67e22; font-weight: bold; margin-top: 15px; }
+        .info { color: #7f8c8d; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Mark Your Attendance</h2>
+    {% if not active_lecture %}
+        <p class="message">No active lecture at the moment. Please wait for the lecturer to start a lecture.</p>
+    {% else %}
+        <p><strong>Lecture:</strong> {{ active_lecture.title }}</p>
+        {% if already_marked %}
+            <p class="message">You have already been marked present for this lecture.</p>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Student Number</th>
+                </tr>
+                <tr>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.student_number }}</td>
+                </tr>
+            </table>
+            <form method="POST" action="/mark_attendance">
+                <button type="submit" class="btn-present">Mark Present</button>
+            </form>
+        {% endif %}
+    {% endif %}
+    <p class="info">You are logged in as {{ student.name }} ({{ student.student_number }})</p>
+</div>
+</body>
+</html>
